@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Client Portal | Train with Clarence</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{--blue:#0033A0;--red:#E31837;--navy:#071b4a;--ink:#172126;--muted:#53616a;--soft:#f4f6f8;--line:#d9e0e5}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--soft);line-height:1.55}.skip{position:absolute;left:-9999px}.skip:focus{left:1rem;top:1rem;background:#fff;padding:.75rem;z-index:20}header{background:#fff;border-bottom:1px solid var(--line)}.wrap{width:min(92%,760px);margin:auto}.brand{font-weight:800;color:var(--navy);padding:1rem 0;font-size:1.1rem}.accent{color:var(--red)}main{padding:2.2rem 0 4rem}.card{background:#fff;border:1px solid var(--line);border-radius:.7rem;padding:clamp(1.2rem,4vw,2rem);box-shadow:0 2px 12px rgba(0,0,0,.04)}h1{color:var(--navy);font-size:clamp(2rem,7vw,3rem);line-height:1.08;margin:.2rem 0 .65rem}.lead{font-size:1.08rem;color:var(--muted);margin:0 0 1.5rem}.quick{display:flex;gap:.6rem;flex-wrap:wrap;margin:0 0 1.2rem}.quick button{background:#fff;border:2px solid var(--blue);color:var(--navy);font-weight:700;padding:.7rem .85rem;border-radius:.45rem;cursor:pointer}.quick button:focus,textarea:focus,button:focus{outline:3px solid #f2b705;outline-offset:2px}label{display:block;font-weight:800;color:var(--navy);margin-bottom:.5rem}textarea{width:100%;min-height:155px;border:2px solid #aab5bd;border-radius:.45rem;padding:.9rem;font:inherit;resize:vertical}.send{width:100%;margin-top:.8rem;background:var(--red);color:#fff;border:0;border-radius:.45rem;padding:.95rem;font:inherit;font-weight:800;cursor:pointer}.send:disabled{opacity:.55;cursor:not-allowed}.status{margin-top:1rem;padding:1rem;background:#eef3ff;border-left:5px solid var(--blue);border-radius:.35rem}.small{font-size:.92rem;color:var(--muted)}.home{display:inline-block;margin-top:1.2rem;color:var(--blue);font-weight:700}.hidden{display:none}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<header><div class="wrap brand">TRAIN WITH <span class="accent">CLARENCE</span></div></header>
+<main id="main" class="wrap">
+  <section class="card" aria-labelledby="welcome">
+    <div class="small" id="portalType">Client Portal</div>
+    <h1 id="welcome">Hi. What would you like help with today?</h1>
+    <p class="lead" id="intro">Use this page to check in with Clarence about your training.</p>
+
+    <div class="quick" id="quickActions" aria-label="Quick prompts"></div>
+
+    <label for="message">Your message</label>
+    <textarea id="message" placeholder="Type or dictate your message here..."></textarea>
+    <button class="send" id="send" type="button" disabled>Send</button>
+
+    <div class="status" role="status">
+      <strong>Prototype ready.</strong> The page is built, but messages are not being transmitted or saved yet. The secure client record and AI connection are the next step.
+    </div>
+    <p class="small">Do not enter private medical information on this prototype yet.</p>
+    <a class="home" href="/">Back to Train with Clarence</a>
+  </section>
+</main>
+<script>
+const token=new URLSearchParams(location.search).get('access');
+const quick=document.getElementById('quickActions');
+async function loadProfile(){
+  if(!token){ showDenied('This client link is missing its access key.'); return; }
+  try{
+    const r=await fetch('/.netlify/functions/client-profile?token='+encodeURIComponent(token),{cache:'no-store'});
+    if(!r.ok){ showDenied('This client link is invalid or has expired.'); return; }
+    const p=await r.json();
+    document.getElementById('portalType').textContent=p.type;
+    document.getElementById('welcome').textContent=p.welcome;
+    document.getElementById('intro').textContent=p.intro;
+    document.title=p.name+' | Train with Clarence';
+    quick.innerHTML='';
+    p.prompts.forEach(t=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.onclick=()=>{document.getElementById('message').value=t+' — ';document.getElementById('message').focus()};quick.appendChild(b)});
+  }catch(e){ showDenied('The client portal could not be loaded right now.'); }
+}
+function showDenied(msg){
+  quick.classList.add('hidden');
+  document.getElementById('welcome').textContent='Private client portal';
+  document.getElementById('intro').textContent=msg;
+  document.getElementById('message').disabled=true;
+}
+loadProfile();
+</script>
+</body>
+</html>
